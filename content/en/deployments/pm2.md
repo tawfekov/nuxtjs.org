@@ -20,7 +20,7 @@ In this guide, we build the application locally and serve it though a PM2 config
 
 ## Getting Started
 
-Make sure you have pm2 installed on your server. If not, simply globally install it from yarn or npm.
+1- Make sure you have pm2 installed on your server. If not, simply globally install it from yarn or npm.
 
 ```bash
 # yarn pm2 install
@@ -29,6 +29,32 @@ $ sudo yarn global add pm2 --prefix /usr/local
 # npm pm2 install
 $ npm install pm2 -g
 ```
+2- Make sure to install `nuxt-start` [package](https://www.npmjs.com/package/nuxt-start) , the bunchline of this package is to : 
+
+>Start Nuxt Application in production mode.
+
+
+```bash
+$ npm install --save nuxt-start
+```
+3- edit your `package.json` to do the following :
+replace this : 
+
+```json
+    "scripts": {
+		"start": "nuxt start"
+     }
+```
+
+with the following : 
+
+```json
+        "scripts": {
+		"start": "nuxt-start" ### note the dash
+	}
+```
+
+
 
 ## Configure your application
 
@@ -36,15 +62,18 @@ All you need to add to your universal Nuxt app for serving it though PM2 is a fi
 
 ```javascript
 module.exports = {
-  apps: [
-    {
-      name: 'NuxtAppName',
-      exec_mode: 'cluster',
-      instances: 'max', // Or a number of instances
-      script: './node_modules/nuxt/bin/nuxt.js',
-      args: 'start'
+  apps: [{
+    name: 'NuxtAppName',
+    exec_mode: 'fork',
+    instances: 'max',
+    autorestart: true,
+    script: './node_modules/nuxt-start/bin/nuxt-start.js ',
+    args: 'start',
+    env_production: {
+      PORT: 3000,
+      NODE_ENV: "production"
     }
-  ]
+  }]
 }
 ```
 
@@ -52,11 +81,20 @@ module.exports = {
 
 Now build your app with `npm run build`.
 
-And serve it with `pm2 start`.
+And serve it with `pm2 start ecosystem.config.js --env production`.
 
 Check the status `pm2 ls`.
+you will see something similar to the following : 
 
-Your Nuxt application is now serving!
+```bash
+┌─────┬──────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id  │ name             │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├─────┼──────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 1   │ NuxtAppName      │ default     │ N/A     │ fork    │ 518703   │ 97s    │ 1    │ online    │ 0%       │ 74.6mb   │ tawfekov │ enabled  │
+└─────┴──────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+```
+
+Your Nuxt application is now serving in `production` mode!
 
 ## Further Information
 
